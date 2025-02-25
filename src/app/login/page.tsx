@@ -8,22 +8,23 @@ import { Alert, Checkbox } from "@heroui/react";
 import { Spinner } from "@heroui/spinner";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { useAppDispatch, useAppSelector } from "@/hooks/dispatch";
-import { login, loginWithWallet, clearError } from "@/store/slices/authSlice";
+import { login, clearError } from "@/store/slices/authSlice";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import Web3 from "web3";
 import ConnectWallet from "@/components/walletConnect";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [loginError, setLoginError] = useState<string>("");
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [isWalletVisible, setIsWalletVisible] = useState<boolean>(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
   const dispatch = useAppDispatch();
   const error = useAppSelector((state) => state.auth.error);
   const loading = useAppSelector((state) => state.auth.loading);
+  const router = useRouter();
 
   useEffect(() => {
     if (error) {
@@ -54,6 +55,7 @@ export default function LoginPage() {
     try {
       setLoginError("");
       await dispatch(login({ email, password }));
+      router.push("/");
     } catch (err) {
       setLoginError("An unexpected error occurred.");
     }
@@ -62,29 +64,6 @@ export default function LoginPage() {
   const handleWalletDisplay = () => {
     setIsWalletVisible(!isWalletVisible);
     setLoginError("");
-  };
-
-  const handleWalletLogin = async () => {
-    if (window.ethereum) {
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const web3 = new Web3(window.ethereum);
-        const accounts = await web3.eth.getAccounts();
-        const walletAddress = accounts[0];
-        const message = `Sign this message to log in: ${walletAddress}`;
-        const signature = await web3.eth.personal.sign(
-          message,
-          walletAddress,
-          "",
-        );
-        await dispatch(loginWithWallet({ message, walletAddress, signature }));
-      } catch (err) {
-        setLoginError("Login failed or user denied access");
-        console.error(err);
-      }
-    } else {
-      setLoginError("MetaMask is not installed");
-    }
   };
 
   return (
@@ -106,7 +85,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardBody className="gap-4">
           <div
-            className={`relative flex w-full flex-auto flex-col place-content-inherit align-items-inherit h-auto break-words text-left overflow-y-auto subpixel-antialiased gap-4 transition-all duration-300 ${
+            className={`relative flex w-full flex-auto flex-col place-content-inherit align-items-inherit break-words text-left overflow-y-auto subpixel-antialiased gap-4 transition-all duration-300 ${
               isWalletVisible
                 ? "opacity-0 -translate-x-full h-0"
                 : "opacity-100 translate-x-0"
@@ -189,13 +168,16 @@ export default function LoginPage() {
             </p>
           </div>
           <ConnectWallet
-            handleWallet={handleWalletLogin}
             className={
               isWalletVisible
                 ? " transition-transform duration-300 opacity-1 transition-all"
                 : "transition-all duration-300 hidden"
             }
             error={loginError}
+            setError={(err) => {
+              setLoginError(err);
+            }}
+            login
           />
         </CardBody>
       </Card>

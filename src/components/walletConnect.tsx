@@ -1,77 +1,169 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
+import { Code, Spinner } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import Web3 from "web3";
+import { useAccount, useSignMessage, useConnect } from "wagmi";
+import { loginWithWallet, signupWithWallet } from "@/store/slices/authSlice";
+import { useAppDispatch } from "@/hooks/dispatch";
+import { useRouter } from "next/navigation";
 
 interface ConnectWalletProps {
-  handleWallet: (wallet: string) => void;
   className: string;
   error: string | null;
+  login?: boolean | null;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const ConnectWallet: React.FC<ConnectWalletProps> = ({
-  handleWallet,
   error,
   className,
+  login,
+  setError,
 }) => {
-  const [installedWallets, setInstalledWallets] = useState<string[]>([]);
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const { connectors, connect } = useConnect();
+  const [justConnected, setJustConnected] = useState(false);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
+  const [isSignatureRequest, setIsSignatureRequest] = useState(false);
+  const [isSignatureSuccess, setIsSignatureSuccess] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   useEffect(() => {
-    const detectWallets = () => {
-      const wallets = [];
-      if (typeof window.ethereum !== "undefined") {
-        if (window.ethereum.isMetaMask) wallets.push("MetaMask");
-        if (window.ethereum.isTrust) wallets.push("Trust Wallet");
-        if (window.ethereum.isCoinbaseWallet) wallets.push("Coinbase Wallet");
-      }
-      setInstalledWallets(wallets);
-    };
-
-    detectWallets();
+    setIsMetaMaskInstalled(
+      typeof window !== "undefined" &&
+        window.ethereum &&
+        window.ethereum.isMetaMask,
+    );
   }, []);
+
+  const handleWallet = async (con: any) => {
+    connect({ connector: con });
+    setJustConnected(true);
+  };
+
+  useEffect(() => {
+    if (isConnected && address && justConnected) {
+      const handleWalletConnect = async () => {
+        try {
+          setIsSignatureRequest(true);
+          const message = `Sign ${login ? "in" : "up"} with your wallet. Timestamp: ${new Date().toISOString()}`;
+          let signature = await signMessageAsync({ message });
+          let resultAction;
+          if (login) {
+            resultAction = await dispatch(
+              loginWithWallet({ message, address, signature }),
+            );
+          } else {
+            resultAction = await dispatch(
+              signupWithWallet({ message, address, signature }),
+            );
+          }
+          setJustConnected(false);
+          if (loginWithWallet.fulfilled.match(resultAction)) {
+            setIsSignatureSuccess(true);
+            setIsSignatureRequest(false);
+            setTimeout(() => {
+              router.push("/");
+            }, 3000);
+          } else {
+            console.error("Login failed:", resultAction.payload);
+          }
+        } catch (err) {
+          setError(
+            `${login ? "Login" : "Sign-up"} failed or user denied access`,
+          );
+          console.error(err);
+        }
+      };
+      handleWalletConnect();
+    }
+  }, [isConnected, address, justConnected]);
 
   return (
     <div
       className={`flex-col item-start justify-start space-y-4 w-auto mb-5  ${className}`}
     >
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <Button
-        onClick={() => handleWallet("MetaMask")}
-        className="flex items-center justify-between w-full"
-        color={installedWallets.includes("MetaMask") ? "success" : "default"}
-        size="lg"
-        variant={installedWallets.includes("MetaMask") ? "shadow" : "bordered"}
-      >
-        <span>MetaMask</span>
-        <Icon className="text-2xl" icon="logos:metamask-icon" />
-      </Button>
-      <Button
-        onClick={() => handleWallet("Trust Wallet")}
-        className="flex items-center justify-between w-full"
-        color={
-          installedWallets.includes("Trust Wallet") ? "success" : "default"
-        }
-        size="lg"
-        variant={
-          installedWallets.includes("Trust Wallet") ? "shadow" : "bordered"
-        }
-      >
-        <span>Trust Wallet</span>
-        <Icon className="text-3xl" icon="token-branded:trust" />
-      </Button>
-      <Button
-        onClick={() => handleWallet("Coinbase Wallet")}
-        className="flex items-center justify-between w-full"
-        color={
-          installedWallets.includes("Coinbase Wallet") ? "success" : "default"
-        }
-        size="lg"
-        variant={
-          installedWallets.includes("Coinbase Wallet") ? "shadow" : "bordered"
-        }
-      >
-        <span>Coinbase</span>
-        <Icon className="text-3xl" icon="token-branded:coinbase" />
-      </Button>
+      {!isSignatureRequest && !isSignatureSuccess && (
+        <>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <Button
+            onClick={() => handleWallet(connectors[1])}
+            className="flex items-center justify-between w-full min-h-16"
+            size="lg"
+            variant="bordered"
+          >
+            <div className="flex items-center">
+              <Icon
+                className="text-3xl mr-3 min-w-9"
+                icon="logos:metamask-icon"
+              />
+              <span className="font-bold">MetaMask</span>
+            </div>
+            {isMetaMaskInstalled && (
+              <Code size="sm" color="success">
+                Installed
+              </Code>
+            )}
+          </Button>
+          <Button
+            onClick={() => handleWallet(connectors[2])}
+            className="flex items-center justify-between w-full min-h-16"
+            size="lg"
+            variant="bordered"
+          >
+            <div className="flex items-center">
+              <Icon
+                className="text-4xl mr-3 min-w-9"
+                icon="token-branded:coinbase"
+              />
+              <span className="font-bold">Coinbase</span>
+            </div>
+          </Button>
+
+          <Button
+            onClick={() => handleWallet(connectors[0])}
+            className="flex items-center justify-between w-full min-h-16"
+            size="lg"
+            variant="bordered"
+          >
+            <div className="flex items-center">
+              <Icon
+                className="text-4xl mr-3 min-w-9"
+                icon="token-branded:wallet-connect"
+              />
+              <span className="font-bold">WalletConnect</span>
+            </div>
+            <Code size="sm" color="default">
+              QR code
+            </Code>
+          </Button>
+        </>
+      )}
+      {isSignatureRequest && (
+        <div className="flex justify-center items-center h-full mt-20 mb-32">
+          <Spinner
+            size="lg"
+            color="success"
+            label="Verify your Signature"
+            labelColor="success"
+          />
+        </div>
+      )}
+      {isSignatureSuccess && (
+        <div className="flex flex-col justify-center items-center h-full mt-20 mb-32">
+          <Icon
+            className="text-6xl mb-5 text-success"
+            color="success"
+            icon="qlementine-icons:success-32"
+          />
+          <div className="text-2xl font-bold text-success">
+            Signature Verified
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import store from "@/store";
 import { Provider } from "react-redux";
-import { Alert } from "@heroui/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider } from "wagmi";
+import { config } from "@/config/wagmi";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -24,11 +26,16 @@ declare module "@react-types/shared" {
 
 export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
+  const queryClient = new QueryClient();
   return (
-    <Provider store={store}>
-      <HeroUIProvider navigate={router.push}>
-        <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
-      </HeroUIProvider>
-    </Provider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>
+          <HeroUIProvider navigate={router.push}>
+            <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
+          </HeroUIProvider>
+        </Provider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

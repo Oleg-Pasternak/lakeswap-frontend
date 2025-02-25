@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
+
 interface User {
   email?: string;
   avatar?: string;
@@ -93,7 +94,7 @@ export const login = createAsyncThunk(
 export const signupWithWallet = createAsyncThunk(
   "auth/signupWithWallet",
   async (
-    credentials: { message: string; walletAddress: string; signature: string },
+    credentials: { message: string; address: string; signature: string },
     { rejectWithValue },
   ) => {
     try {
@@ -113,7 +114,7 @@ export const signupWithWallet = createAsyncThunk(
 export const loginWithWallet = createAsyncThunk(
   "auth/loginWithWallet",
   async (
-    credentials: { message: string; walletAddress: string; signature: string },
+    credentials: { address: string; signature: string; message: string },
     { rejectWithValue },
   ) => {
     try {

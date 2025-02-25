@@ -29,6 +29,7 @@ import {
   Avatar,
 } from "@heroui/react";
 import { button as buttonStyles } from "@heroui/theme";
+import { useDisconnect } from "wagmi";
 
 export const Navbar = () => {
   const { user, loading, error } = useAppSelector((state) => state.auth);
@@ -38,9 +39,11 @@ export const Navbar = () => {
     : undefined;
   const username = user?.email?.split("@")[0] || walletAddress;
   const dispatch = useAppDispatch();
+  const { disconnect } = useDisconnect();
 
   const handleLogout = () => {
     dispatch(logout());
+    disconnect();
   };
 
   return (
