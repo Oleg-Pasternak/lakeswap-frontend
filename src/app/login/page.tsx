@@ -8,11 +8,12 @@ import { Alert, Checkbox } from "@heroui/react";
 import { Spinner } from "@heroui/spinner";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { useAppDispatch, useAppSelector } from "@/hooks/dispatch";
-import { login, clearError } from "@/store/slices/authSlice";
+import { login, clearError, authWithGoogle } from "@/store/slices/authSlice";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import ConnectWallet from "@/components/walletConnect";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
@@ -58,6 +59,28 @@ export default function LoginPage() {
       router.push("/");
     } catch (err) {
       setLoginError("An unexpected error occurred.");
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      const result = await signIn("google");
+
+      console.log(result);
+
+      if (result?.error) {
+        setLoginError("Google authentication failed.");
+        return;
+      }
+
+      // const googleToken = result?.token;
+
+      // await dispatch(authWithGoogle({ token: googleToken }));
+      // router.push("/");
+      setLoginError("");
+    } catch (err) {
+      setLoginError("An unexpected error occurred.");
+      console.error(err);
     }
   };
 
@@ -156,6 +179,9 @@ export default function LoginPage() {
                 }
                 variant="bordered"
                 className="w-full p-5"
+                onClick={() => {
+                  handleGoogleAuth();
+                }}
               >
                 Continue with Google
               </Button>

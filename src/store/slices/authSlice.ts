@@ -91,6 +91,23 @@ export const login = createAsyncThunk(
   },
 );
 
+export const authWithGoogle = createAsyncThunk(
+  "auth/authWithGoogle",
+  async (credentials: { token: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google`,
+        credentials,
+      );
+      Cookies.set("token", response.data.token, { expires: 1 });
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data);
+    }
+  },
+);
+
 export const signupWithWallet = createAsyncThunk(
   "auth/signupWithWallet",
   async (
@@ -176,6 +193,22 @@ const authSlice = createSlice({
         },
       )
       .addCase(login.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload["message"];
+      })
+      .addCase(authWithGoogle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        authWithGoogle.fulfilled,
+        (state, action: PayloadAction<{ email: string; token: string }>) => {
+          state.user = action.payload;
+          state.loading = false;
+          state.error = null;
+        },
+      )
+      .addCase(authWithGoogle.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.error = action.payload["message"];
       })

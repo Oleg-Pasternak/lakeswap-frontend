@@ -67,7 +67,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({
             setIsSignatureRequest(false);
             setTimeout(() => {
               router.push("/");
-            }, 3000);
+            }, 2000);
           } else {
             console.error("Login failed:", resultAction.payload);
           }
