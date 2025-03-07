@@ -37,7 +37,7 @@ export default [
     ...pluginReact.configs.flat.recommended,
     settings: {
       react: {
-        version: "detect", // Automatically detects the React version
+        version: "detect",
       },
     },
   },
