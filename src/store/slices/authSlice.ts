@@ -10,7 +10,7 @@ interface User {
 }
 
 interface AuthState {
-  auth: any;
+  auth: unknown;
   user: User | null;
   loading: boolean;
   error: string | null;
@@ -66,7 +66,7 @@ export const signup = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data);
+      return rejectWithValue(axiosError.response?.data || "Signup failed");
     }
   },
 );
@@ -86,7 +86,7 @@ export const login = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data);
+      return rejectWithValue(axiosError.response?.data || "Login failed");
     }
   },
 );
@@ -103,7 +103,7 @@ export const authWithGoogle = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data);
+      return rejectWithValue(axiosError.response?.data || "Google auth failed");
     }
   },
 );
@@ -123,7 +123,9 @@ export const signupWithWallet = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data);
+      return rejectWithValue(
+        axiosError.response?.data || "Wallet signup failed",
+      );
     }
   },
 );
@@ -143,7 +145,9 @@ export const loginWithWallet = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data);
+      return rejectWithValue(
+        axiosError.response?.data || "Wallet login failed",
+      );
     }
   },
 );
@@ -171,14 +175,15 @@ const authSlice = createSlice({
       .addCase(
         signup.fulfilled,
         (state, action: PayloadAction<{ email: string; token: string }>) => {
-          state.user = action.payload;
+          state.user = { email: action.payload.email };
           state.loading = false;
           state.error = null;
         },
       )
-      .addCase(signup.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(signup.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload["message"];
+        state.error =
+          (action.payload as { message: string })?.message || "Signup failed";
       })
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -187,14 +192,15 @@ const authSlice = createSlice({
       .addCase(
         login.fulfilled,
         (state, action: PayloadAction<{ email: string; token: string }>) => {
-          state.user = action.payload;
+          state.user = { email: action.payload.email };
           state.loading = false;
           state.error = null;
         },
       )
-      .addCase(login.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload["message"];
+        state.error =
+          (action.payload as { message: string })?.message || "Login failed";
       })
       .addCase(authWithGoogle.pending, (state) => {
         state.loading = true;
@@ -203,14 +209,16 @@ const authSlice = createSlice({
       .addCase(
         authWithGoogle.fulfilled,
         (state, action: PayloadAction<{ email: string; token: string }>) => {
-          state.user = action.payload;
+          state.user = { email: action.payload.email };
           state.loading = false;
           state.error = null;
         },
       )
-      .addCase(authWithGoogle.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(authWithGoogle.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload["message"];
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Google auth failed";
       })
       .addCase(signupWithWallet.pending, (state) => {
         state.loading = true;
@@ -222,18 +230,17 @@ const authSlice = createSlice({
           state,
           action: PayloadAction<{ walletAddresses: string[]; token: string }>,
         ) => {
-          state.user = action.payload;
+          state.user = { walletAddresses: action.payload.walletAddresses };
           state.loading = false;
           state.error = null;
         },
       )
-      .addCase(
-        signupWithWallet.rejected,
-        (state, action: PayloadAction<any>) => {
-          state.loading = false;
-          state.error = action.payload["message"];
-        },
-      )
+      .addCase(signupWithWallet.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Wallet signup failed";
+      })
       .addCase(loginWithWallet.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -244,18 +251,17 @@ const authSlice = createSlice({
           state,
           action: PayloadAction<{ walletAddresses: string[]; token: string }>,
         ) => {
-          state.user = action.payload;
+          state.user = { walletAddresses: action.payload.walletAddresses };
           state.loading = false;
           state.error = null;
         },
       )
-      .addCase(
-        loginWithWallet.rejected,
-        (state, action: PayloadAction<any>) => {
-          state.loading = false;
-          state.error = action.payload["message"];
-        },
-      )
+      .addCase(loginWithWallet.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Wallet login failed";
+      })
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -267,13 +273,12 @@ const authSlice = createSlice({
           state.loading = false;
         },
       )
-      .addCase(
-        fetchUserProfile.rejected,
-        (state, action: PayloadAction<any>) => {
-          state.loading = false;
-          state.error = action.payload["message"];
-        },
-      );
+      .addCase(fetchUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Failed to fetch user profile";
+      });
   },
 });
 

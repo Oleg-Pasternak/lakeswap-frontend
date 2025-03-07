@@ -1,12 +1,12 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { Alert } from "@heroui/alert";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/dispatch";
 import { signup, clearError } from "@/store/slices/authSlice";
 import { Icon } from "@iconify/react";
@@ -42,8 +42,12 @@ const useSignUp = () => {
         router.push("/");
         setError("");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred during sign up");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An error occurred during sign up");
+      }
     }
   };
 

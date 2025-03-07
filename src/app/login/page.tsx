@@ -8,7 +8,7 @@ import { Alert, Checkbox } from "@heroui/react";
 import { Spinner } from "@heroui/spinner";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { useAppDispatch, useAppSelector } from "@/hooks/dispatch";
-import { login, clearError, authWithGoogle } from "@/store/slices/authSlice";
+import { login, clearError } from "@/store/slices/authSlice";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import ConnectWallet from "@/components/walletConnect";
@@ -57,7 +57,7 @@ export default function LoginPage() {
       setLoginError("");
       await dispatch(login({ email, password }));
       router.push("/");
-    } catch (err) {
+    } catch {
       setLoginError("An unexpected error occurred.");
     }
   };
@@ -78,9 +78,8 @@ export default function LoginPage() {
       // await dispatch(authWithGoogle({ token: googleToken }));
       // router.push("/");
       setLoginError("");
-    } catch (err) {
+    } catch {
       setLoginError("An unexpected error occurred.");
-      console.error(err);
     }
   };
 
@@ -187,7 +186,7 @@ export default function LoginPage() {
               </Button>
             </div>
             <p className="text-center text-sm text-gray-600 mt-3 mb-3">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="text-primary hover:underline">
                 Sign up
               </Link>

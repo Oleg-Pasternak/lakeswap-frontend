@@ -1,12 +1,10 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { title, subtitle } from "@/components/primitives";
 import { useAccount, useEnsName, useBalance } from "wagmi";
-import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
 
 export default function Home() {
-  const { user, loading, error } = useAuth();
   const { address, addresses, isConnecting, isDisconnected, connector } =
     useAccount();
   const { data: balance } = useBalance({ address });

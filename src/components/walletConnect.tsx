@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Code, Spinner } from "@heroui/react";
 import { Icon } from "@iconify/react";
-import Web3 from "web3";
 import { useAccount, useSignMessage, useConnect } from "wagmi";
 import { loginWithWallet, signupWithWallet } from "@/store/slices/authSlice";
 import { useAppDispatch } from "@/hooks/dispatch";
@@ -39,7 +38,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({
     );
   }, []);
 
-  const handleWallet = async (con: any) => {
+  const handleWallet = async (con: (typeof connectors)[number]) => {
     connect({ connector: con });
     setJustConnected(true);
   };
@@ -50,7 +49,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({
         try {
           setIsSignatureRequest(true);
           const message = `Sign ${login ? "in" : "up"} with your wallet. Timestamp: ${new Date().toISOString()}`;
-          let signature = await signMessageAsync({ message });
+          const signature = await signMessageAsync({ message });
           let resultAction;
           if (login) {
             resultAction = await dispatch(

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Select, Switch, SelectItem } from "@heroui/react";
-import { title, subtitle } from "@/components/primitives";
+import { title } from "@/components/primitives";
 
 const SettingsPage: React.FC = () => {
   const [theme, setTheme] = useState("light");

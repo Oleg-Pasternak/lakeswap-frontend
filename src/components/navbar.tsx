@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Navbar as HeroUINavbar,
   NavbarContent,
@@ -9,18 +10,16 @@ import {
   NavbarItem,
   NavbarMenuItem,
 } from "@heroui/navbar";
-import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
 import { Skeleton } from "@heroui/react";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { GithubIcon, SearchIcon, Logo } from "@/components/icons";
+import { Logo } from "@/components/icons";
 import { useAppSelector } from "@/hooks/dispatch";
 import { logout } from "@/store/slices/authSlice";
 import { useAppDispatch } from "@/hooks/dispatch";
-import { Icon } from "@iconify/react";
 import {
   DropdownItem,
   DropdownTrigger,
@@ -32,7 +31,7 @@ import { button as buttonStyles } from "@heroui/theme";
 import { useDisconnect } from "wagmi";
 
 export const Navbar = () => {
-  const { user, loading, error } = useAppSelector((state) => state.auth);
+  const { user, loading } = useAppSelector((state) => state.auth);
   const isAuth = user?.email || user?.walletAddresses?.[0];
   const walletAddress = user?.walletAddresses?.[0]
     ? `${user.walletAddresses[0].substring(0, 5)}.....${user.walletAddresses[0].substring(user.walletAddresses[0].length - 5)}`
