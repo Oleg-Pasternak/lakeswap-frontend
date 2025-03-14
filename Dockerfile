@@ -4,6 +4,7 @@ WORKDIR /app/
 COPY . /app/
 RUN npm install
 RUN npm run build
+CMD ["npm", "run", "start"]
 
 ARG NEXT_PUBLIC_FRONTEND_URL
 ARG NEXT_PUBLIC_BACKEND_URL
