@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
-import { Alert, Checkbox } from "@heroui/react";
+import { Alert } from "@heroui/react";
 import { Spinner } from "@heroui/spinner";
+import { Checkbox } from "@heroui/checkbox";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { useAppDispatch, useAppSelector } from "@/hooks/dispatch";
 import { login, clearError } from "@/store/slices/authSlice";
@@ -213,7 +214,6 @@ export default function LoginPage() {
             : "fixed bottom-6 right-6 w-80 opacity-0 transition-opacity duration-300"
         }
       >
-        <Alert color="danger" title={error} />
       </div>
     </div>
   );

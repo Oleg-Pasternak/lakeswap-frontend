@@ -38,7 +38,7 @@ const useSignUp = () => {
       }
 
       const result = await dispatch(signup({ email, password }));
-      if (result.payload) {
+      if (result) {
         router.push("/");
         setError("");
       }

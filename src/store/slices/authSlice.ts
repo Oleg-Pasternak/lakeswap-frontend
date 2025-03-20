@@ -46,7 +46,7 @@ export const fetchUserProfile = createAsyncThunk(
       }
       return rejectWithValue(
         axiosError.response?.data || "Failed to fetch user profile",
-      );
+      ); 
     }
   },
 );
