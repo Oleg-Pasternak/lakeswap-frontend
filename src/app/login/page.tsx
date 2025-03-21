@@ -200,9 +200,6 @@ export default function LoginPage() {
                 : "transition-all duration-300 hidden"
             }
             error={loginError}
-            setError={(err) => {
-              setLoginError(err);
-            }}
             login
           />
         </CardBody>

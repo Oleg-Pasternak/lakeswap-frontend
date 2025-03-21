@@ -25,7 +25,7 @@ export const Logo: React.FC<IconSvgProps> = ({
       strokeWidth="1.7"
     />
     <path
-      fill="none"
+      fill="currentColor"
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"

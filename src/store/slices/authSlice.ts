@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
+import { addToast } from "@heroui/react";
 
 interface User {
   email?: string;
@@ -46,7 +47,7 @@ export const fetchUserProfile = createAsyncThunk(
       }
       return rejectWithValue(
         axiosError.response?.data || "Failed to fetch user profile",
-      ); 
+      );
     }
   },
 );
@@ -184,6 +185,14 @@ const authSlice = createSlice({
         state.loading = false;
         state.error =
           (action.payload as { message: string })?.message || "Signup failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message || "Signup failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Signup Failed",
+          description: errorMessage,
+          color: "danger",
+        });
       })
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -201,6 +210,14 @@ const authSlice = createSlice({
         state.loading = false;
         state.error =
           (action.payload as { message: string })?.message || "Login failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message || "Login failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Login Failed",
+          description: errorMessage,
+          color: "danger",
+        });
       })
       .addCase(authWithGoogle.pending, (state) => {
         state.loading = true;
@@ -219,6 +236,15 @@ const authSlice = createSlice({
         state.error =
           (action.payload as { message: string })?.message ||
           "Google auth failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Google auth failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Google Auth Failed",
+          description: errorMessage,
+          color: "danger",
+        });
       })
       .addCase(signupWithWallet.pending, (state) => {
         state.loading = true;
@@ -240,6 +266,15 @@ const authSlice = createSlice({
         state.error =
           (action.payload as { message: string })?.message ||
           "Wallet signup failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Wallet signup failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Wallet Signup Failed",
+          description: errorMessage,
+          color: "danger",
+        });
       })
       .addCase(loginWithWallet.pending, (state) => {
         state.loading = true;
@@ -257,10 +292,19 @@ const authSlice = createSlice({
         },
       )
       .addCase(loginWithWallet.rejected, (state, action) => {
-        state.loading = false;
         state.error =
           (action.payload as { message: string })?.message ||
           "Wallet login failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Wallet login failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Wallet Login Failed",
+          description: errorMessage,
+          color: "danger",
+        });
+        ("Wallet login failed");
       })
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;

@@ -72,7 +72,6 @@ export default function SignUpPage() {
     setPassword,
     handleSignUp,
     error,
-    setError,
     errorState,
     loading,
   } = useSignUp();
@@ -188,9 +187,6 @@ export default function SignUpPage() {
                 : "transition-all duration-300 hidden"
             }
             error={error}
-            setError={(err) => {
-              setError(err);
-            }}
           />
         </CardBody>
       </Card>

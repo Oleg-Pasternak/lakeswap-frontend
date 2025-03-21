@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Navbar as HeroUINavbar,
   NavbarContent,
@@ -31,6 +31,7 @@ import { button as buttonStyles } from "@heroui/theme";
 import { useDisconnect } from "wagmi";
 
 export const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const { user, loading } = useAppSelector((state) => state.auth);
   const isAuth = user?.email || user?.walletAddresses?.[0];
   const walletAddress = user?.walletAddresses?.[0]
@@ -45,8 +46,17 @@ export const Navbar = () => {
     disconnect();
   };
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, []);
+
   return (
-    <HeroUINavbar maxWidth="xl" position="sticky">
+    <HeroUINavbar
+      maxWidth="xl"
+      position="sticky"
+      isMenuOpen={isMenuOpen}
+      onMenuOpenChange={setIsMenuOpen}
+    >
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">
@@ -128,38 +138,76 @@ export const Navbar = () => {
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
         <ThemeSwitch />
-        <NavbarMenuToggle />
+
+        {!isAuth && <NavbarMenuToggle />}
+        {isAuth && (
+          <Avatar
+            isBordered
+            as="button"
+            className="transition-transform mb-5 mt-5"
+            color="primary"
+            name={user?.email || user?.walletAddresses?.[0]}
+            size="sm"
+            src={user?.avatar}
+            onClick={() => {
+              setIsMenuOpen(!isMenuOpen);
+            }}
+          />
+        )}
       </NavbarContent>
 
       <NavbarMenu>
         <div className="mt-2 flex flex-col gap-2">
           {isAuth && (
-            <Avatar
-              isBordered
-              as="button"
-              className="transition-transform mb-5 mt-5"
-              color="primary"
-              name={user?.email || user?.walletAddresses?.[0]}
-              size="lg"
-              src={user?.avatar}
-            />
+            <>
+              <Avatar
+                isBordered
+                as="button"
+                className="transition-transform mb-5 mt-5"
+                color="primary"
+                name={user?.email || user?.walletAddresses?.[0]}
+                size="lg"
+                src={user?.avatar}
+              />
+              <p className="font-semibold mb-20">{username}</p>
+              {siteConfig.authMenuItems.map((item, index) => (
+                <NavbarMenuItem key={`${item}-${index}`} className="mt-2">
+                  <NextLink
+                    href={item.href}
+                    className={item.classnames + " text-2xl"}
+                    onClick={() => {
+                      setIsMenuOpen(!isMenuOpen);
+                    }}
+                  >
+                    {item.label}
+                  </NextLink>
+                </NavbarMenuItem>
+              ))}
+            </>
           )}
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <NextLink
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
-                }
-                href="#"
-              >
-                {item.label}
-              </NextLink>
-            </NavbarMenuItem>
-          ))}
+          <div className="mt-40">
+            {!isAuth &&
+              siteConfig.navMenuItems.map((item, index) => (
+                <NavbarMenuItem key={`${item}-${index}`} className="mt-5">
+                  <NextLink
+                    color={
+                      index === 2
+                        ? "primary"
+                        : index === siteConfig.navMenuItems.length - 1
+                          ? "danger"
+                          : "foreground"
+                    }
+                    href={item.href}
+                    className={"text-2xl"}
+                    onClick={() => {
+                      setIsMenuOpen(!isMenuOpen);
+                    }}
+                  >
+                    {item.label}
+                  </NextLink>
+                </NavbarMenuItem>
+              ))}
+          </div>
         </div>
       </NavbarMenu>
     </HeroUINavbar>
