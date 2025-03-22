@@ -37,7 +37,7 @@ export const Navbar = () => {
   const walletAddress = user?.walletAddresses?.[0]
     ? `${user.walletAddresses[0].substring(0, 5)}.....${user.walletAddresses[0].substring(user.walletAddresses[0].length - 5)}`
     : undefined;
-  const username = user?.email?.split("@")[0] || walletAddress;
+  const username = user?.email || walletAddress;
   const dispatch = useAppDispatch();
   const { disconnect } = useDisconnect();
 

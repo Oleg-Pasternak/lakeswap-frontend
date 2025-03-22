@@ -3,7 +3,7 @@ import { Button } from "@heroui/button";
 import { Code, Spinner, addToast } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useAccount, useSignMessage, useConnect } from "wagmi";
-import { loginWithWallet, signupWithWallet } from "@/store/slices/authSlice";
+import { authWithWallet } from "@/store/slices/authSlice";
 import { useAppDispatch } from "@/hooks/dispatch";
 import { useRouter } from "next/navigation";
 
@@ -51,12 +51,10 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({
       const message = `Sign ${login ? "in" : "up"} with your wallet. Timestamp: ${new Date().toISOString()}`;
       const signature = await signMessageAsync({ message });
       const resultAction = await dispatch(
-        login
-          ? loginWithWallet({ message, address, signature })
-          : signupWithWallet({ message, address, signature }),
+        authWithWallet({ message, address, signature }),
       );
       setJustConnected(false);
-      if (loginWithWallet.fulfilled.match(resultAction)) {
+      if (authWithWallet.fulfilled.match(resultAction)) {
         setIsSignatureSuccess(true);
         setIsSignatureRequest(false);
         setTimeout(() => router.push("/"), 2000);

@@ -145,7 +145,7 @@ export default function LoginPage() {
               <Checkbox name="remember" size="sm">
                 Remember me
               </Checkbox>
-              <Link className="text-default-500 text-sm" href="#">
+              <Link className="text-default-500 text-sm" href="/forgot">
                 Forgot password?
               </Link>
             </div>
@@ -210,8 +210,7 @@ export default function LoginPage() {
             ? "fixed bottom-6 right-6 w-80 opacity-100 transition-opacity duration-300"
             : "fixed bottom-6 right-6 w-80 opacity-0 transition-opacity duration-300"
         }
-      >
-      </div>
+      ></div>
     </div>
   );
 }

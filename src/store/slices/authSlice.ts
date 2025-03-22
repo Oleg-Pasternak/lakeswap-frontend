@@ -92,6 +92,65 @@ export const login = createAsyncThunk(
   },
 );
 
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async (email: string, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/forgot-password`,
+        { email },
+      );
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(
+        axiosError.response?.data || "Forgot password failed",
+      );
+    }
+  },
+);
+
+export const verifyResetCode = createAsyncThunk(
+  "forgotPassword/verifyResetCode",
+  async (credentials: { email: string; code: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-code`,
+        {
+          email: credentials.email,
+          code: credentials.code,
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Invalid verification code",
+      );
+    }
+  },
+);
+
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async (
+    credentials: { email: string; code: string; newPassword: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/reset-password`,
+        credentials,
+      );
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(
+        axiosError.response?.data || "Reset password failed",
+      );
+    }
+  },
+);
+
 export const authWithGoogle = createAsyncThunk(
   "auth/authWithGoogle",
   async (credentials: { token: string }, { rejectWithValue }) => {
@@ -109,33 +168,11 @@ export const authWithGoogle = createAsyncThunk(
   },
 );
 
-export const signupWithWallet = createAsyncThunk(
-  "auth/signupWithWallet",
+export const authWithWallet = createAsyncThunk(
+  "auth/authWithWallet",
   async (
     credentials: { message: string; address: string; signature: string },
-    { rejectWithValue },
-  ) => {
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signup/wallet`,
-        credentials,
-      );
-      Cookies.set("token", response.data.token, { expires: 1 });
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      return rejectWithValue(
-        axiosError.response?.data || "Wallet signup failed",
-      );
-    }
-  },
-);
-
-export const loginWithWallet = createAsyncThunk(
-  "auth/loginWithWallet",
-  async (
-    credentials: { address: string; signature: string; message: string },
-    { rejectWithValue },
+    { rejectWithValue, dispatch },
   ) => {
     try {
       const response = await axios.post(
@@ -146,9 +183,22 @@ export const loginWithWallet = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(
-        axiosError.response?.data || "Wallet login failed",
-      );
+      if (axiosError.response?.status === 404) {
+        try {
+          const signupResponse = await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signup/wallet`,
+            credentials,
+          );
+          Cookies.set("token", signupResponse.data.token, { expires: 1 });
+          return signupResponse.data;
+        } catch (signupError) {
+          const signupAxiosError = signupError as AxiosError;
+          return rejectWithValue(
+            signupAxiosError.response?.data || "Wallet auth failed",
+          );
+        }
+      }
+      return rejectWithValue(axiosError.response?.data || "Wallet auth failed");
     }
   },
 );
@@ -219,6 +269,75 @@ const authSlice = createSlice({
           color: "danger",
         });
       })
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Forgot password failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Forgot password failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Forgot Password Failed",
+          description: errorMessage,
+          color: "danger",
+        });
+      })
+      .addCase(verifyResetCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyResetCode.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(verifyResetCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Reset code verification failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Reset code verification failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Reset Code Verification Failed",
+          description: errorMessage,
+          color: "danger",
+        });
+      })
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Reset password failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Reset password failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Reset Password Failed",
+          description: errorMessage,
+          color: "danger",
+        });
+      })
       .addCase(authWithGoogle.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -246,12 +365,12 @@ const authSlice = createSlice({
           color: "danger",
         });
       })
-      .addCase(signupWithWallet.pending, (state) => {
+      .addCase(authWithWallet.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(
-        signupWithWallet.fulfilled,
+        authWithWallet.fulfilled,
         (
           state,
           action: PayloadAction<{ walletAddresses: string[]; token: string }>,
@@ -261,50 +380,20 @@ const authSlice = createSlice({
           state.error = null;
         },
       )
-      .addCase(signupWithWallet.rejected, (state, action) => {
+      .addCase(authWithWallet.rejected, (state, action) => {
         state.loading = false;
         state.error =
           (action.payload as { message: string })?.message ||
-          "Wallet signup failed";
+          "Wallet auth failed";
         const errorMessage =
           (action.payload as { message: string })?.message ||
-          "Wallet signup failed";
+          "Wallet auth failed";
         state.error = errorMessage;
         addToast({
-          title: "Wallet Signup Failed",
+          title: "Wallet Auth Failed",
           description: errorMessage,
           color: "danger",
         });
-      })
-      .addCase(loginWithWallet.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(
-        loginWithWallet.fulfilled,
-        (
-          state,
-          action: PayloadAction<{ walletAddresses: string[]; token: string }>,
-        ) => {
-          state.user = { walletAddresses: action.payload.walletAddresses };
-          state.loading = false;
-          state.error = null;
-        },
-      )
-      .addCase(loginWithWallet.rejected, (state, action) => {
-        state.error =
-          (action.payload as { message: string })?.message ||
-          "Wallet login failed";
-        const errorMessage =
-          (action.payload as { message: string })?.message ||
-          "Wallet login failed";
-        state.error = errorMessage;
-        addToast({
-          title: "Wallet Login Failed",
-          description: errorMessage,
-          color: "danger",
-        });
-        ("Wallet login failed");
       })
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
