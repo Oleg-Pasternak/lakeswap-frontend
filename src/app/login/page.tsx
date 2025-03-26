@@ -145,7 +145,7 @@ export default function LoginPage() {
               <Checkbox name="remember" size="sm">
                 Remember me
               </Checkbox>
-              <Link className="text-default-500 text-sm" href="/forgot">
+              <Link className="text-default-500 text-sm" href="/reset-password">
                 Forgot password?
               </Link>
             </div>

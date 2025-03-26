@@ -63,11 +63,31 @@ export const signup = createAsyncThunk(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signup`,
         credentials,
       );
-      Cookies.set("token", response.data.token, { expires: 1 });
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
       return rejectWithValue(axiosError.response?.data || "Signup failed");
+    }
+  },
+);
+
+export const verifyEmail = createAsyncThunk(
+  "auth/verifySignupCode",
+  async (creditinals: { email: string; code: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-email`,
+        creditinals,
+      );
+      if (response.data.token) {
+        Cookies.set("token", response.data.token, { expires: 1 });
+      }
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(
+        axiosError.response?.data || "Verification failed",
+      );
     }
   },
 );
@@ -223,14 +243,10 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        signup.fulfilled,
-        (state, action: PayloadAction<{ email: string; token: string }>) => {
-          state.user = { email: action.payload.email };
-          state.loading = false;
-          state.error = null;
-        },
-      )
+      .addCase(signup.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
       .addCase(signup.rejected, (state, action) => {
         state.loading = false;
         state.error =
@@ -240,6 +256,33 @@ const authSlice = createSlice({
         state.error = errorMessage;
         addToast({
           title: "Signup Failed",
+          description: errorMessage,
+          color: "danger",
+        });
+      })
+      .addCase(verifyEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        verifyEmail.fulfilled,
+        (state, action: PayloadAction<{ email: string; token: string }>) => {
+          state.user = { email: action.payload.email };
+          state.loading = false;
+          state.error = null;
+        },
+      )
+      .addCase(verifyEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as { message: string })?.message ||
+          "Verification failed";
+        const errorMessage =
+          (action.payload as { message: string })?.message ||
+          "Verification failed";
+        state.error = errorMessage;
+        addToast({
+          title: "Error",
           description: errorMessage,
           color: "danger",
         });

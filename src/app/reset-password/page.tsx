@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Input
                 type="email"
-                label="Email"
+                label="Enter your e-mail address"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -163,7 +163,7 @@ export default function ForgotPasswordPage() {
                 className="w-full p-5"
                 onClick={handleSendCode}
               >
-                {loading ? <Spinner color="default" size="sm" /> : "Send Code"}
+                {loading ? <Spinner color="default" size="sm" /> : "Submit"}
               </Button>
             </>
           ) : step === "code" ? (
