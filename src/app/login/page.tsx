@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
-import { Alert } from "@heroui/react";
 import { Spinner } from "@heroui/spinner";
 import { Checkbox } from "@heroui/checkbox";
 import { Card, CardBody, CardHeader } from "@heroui/card";
@@ -14,7 +13,6 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import ConnectWallet from "@/components/walletConnect";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
@@ -56,29 +54,12 @@ export default function LoginPage() {
     }
     try {
       setLoginError("");
-      await dispatch(login({ email, password }));
-      router.push("/");
-    } catch {
-      setLoginError("An unexpected error occurred.");
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    try {
-      const result = await signIn("google");
-
-      console.log(result);
-
-      if (result?.error) {
-        setLoginError("Google authentication failed.");
-        return;
+      const result = await dispatch(login({ email, password }));
+      if (result.payload.message == "Invalid or expired code") {
+        setLoginError("Invalid or expired code");
+      } else if (result.payload.token) {
+        router.push("/");
       }
-
-      // const googleToken = result?.token;
-
-      // await dispatch(authWithGoogle({ token: googleToken }));
-      // router.push("/");
-      setLoginError("");
     } catch {
       setLoginError("An unexpected error occurred.");
     }
@@ -172,18 +153,6 @@ export default function LoginPage() {
                 onClick={handleWalletDisplay}
               >
                 Connect Wallet
-              </Button>
-              <Button
-                startContent={
-                  <Icon icon="flat-color-icons:google" width={24} />
-                }
-                variant="bordered"
-                className="w-full p-5"
-                onClick={() => {
-                  handleGoogleAuth();
-                }}
-              >
-                Continue with Google
               </Button>
             </div>
             <p className="text-center text-sm text-gray-600 mt-3 mb-3">

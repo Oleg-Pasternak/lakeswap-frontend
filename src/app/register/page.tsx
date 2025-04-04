@@ -42,15 +42,40 @@ const useSignUp = () => {
     }
   }, [step, router]);
 
+  const validatePassword = (password: string) => {
+    const hasMinLength = password.length >= 8;
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasNumber = /\d/.test(password);
+    return {
+      isValid: hasMinLength && hasSpecialChar && hasNumber,
+      checks: {
+        length: hasMinLength,
+        complexity: hasSpecialChar && hasNumber,
+      },
+    };
+  };
+
   const handleSignUp = async () => {
     try {
       if (!email || !password) {
         throw new Error("Email and password are required.");
       }
 
-      await dispatch(signup({ email, password }));
-      setError("");
-      setStep("confirm");
+      const validation = validatePassword(password);
+      if (!validation.isValid) {
+        throw new Error("Password does not meet requirements.");
+      }
+
+      const result = await dispatch(signup({ email, password }));
+      if (
+        result.payload?.message ===
+        "Signup successful. Please check your email to verify your account."
+      ) {
+        setError("");
+        setStep("confirm");
+      } else {
+        setError(result.payload?.message || "An error occurred");
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -69,12 +94,14 @@ const useSignUp = () => {
       const result = await dispatch(
         verifyEmail({ email, code: confirmationCode }),
       );
-      if (result.payload.message == "Email verified successfully") {
+      if (result.payload?.message === "Email verified successfully") {
         setStep("success");
-      } else if (result.payload.message == "Email is already verified") {
+      } else if (result.payload?.message === "Email is already verified") {
         setError("Email is already verified");
       } else {
-        setError("Invalid verification code or email");
+        setError(
+          result.payload?.message || "Invalid verification code or email",
+        );
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -100,6 +127,7 @@ const useSignUp = () => {
     loading,
     step,
     setStep,
+    validatePassword,
   };
 };
 
@@ -118,12 +146,15 @@ export default function SignUpPage() {
     loading,
     step,
     setStep,
+    validatePassword,
   } = useSignUp();
 
   const [isWalletVisible, setIsWalletVisible] = useState<boolean>(false);
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
   const toggleWalletVisibility = () => setIsWalletVisible(!isWalletVisible);
+
+  const passwordValidation = validatePassword(password);
 
   return (
     <div className="flex justify-center items-center min-h-[70vh]">
@@ -188,11 +219,39 @@ export default function SignUpPage() {
                   </button>
                 }
               />
+              <div
+                className={`text-sm space-y-1 transition-all duration-300 overflow-hidden ${password ? "max-h-32" : "max-h-0"}`}
+                style={{ height: password ? "auto" : "0" }}
+              >
+                <div className="flex items-center">
+                  <Icon
+                    icon={
+                      passwordValidation.checks.length
+                        ? "mdi:check-circle"
+                        : "mdi:circle-outline"
+                    }
+                    className={`mr-2 ${passwordValidation.checks.length ? "text-green-500" : "text-gray-400"}`}
+                  />
+                  <span>At least 8 characters</span>
+                </div>
+                <div className="flex items-center">
+                  <Icon
+                    icon={
+                      passwordValidation.checks.complexity
+                        ? "mdi:check-circle"
+                        : "mdi:circle-outline"
+                    }
+                    className={`mr-2 ${passwordValidation.checks.complexity ? "text-green-500" : "text-gray-400"}`}
+                  />
+                  <span>Contains symbol, number and special character</span>
+                </div>
+              </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button
                 color="primary"
                 className="w-full mt-4 p-6"
                 onClick={handleSignUp}
+                disabled={!passwordValidation.isValid}
               >
                 {loading ? <Spinner color="default" size="sm" /> : "Sign Up"}
               </Button>
@@ -211,15 +270,6 @@ export default function SignUpPage() {
                   onClick={toggleWalletVisibility}
                 >
                   Sign Up with Wallet
-                </Button>
-                <Button
-                  startContent={
-                    <Icon icon="flat-color-icons:google" width={24} />
-                  }
-                  variant="bordered"
-                  className="w-full p-5"
-                >
-                  Continue with Google
                 </Button>
               </div>
               <p className="text-center text-sm text-gray-600 mt-4 mb-3">
@@ -284,7 +334,7 @@ export default function SignUpPage() {
             : "fixed bottom-6 right-6 w-80 opacity-0 transition-opacity duration-300"
         }
       >
-        <Alert color="danger" title={errorState} />
+        {errorState && <Alert color="danger" title={errorState} />}
       </div>
     </div>
   );

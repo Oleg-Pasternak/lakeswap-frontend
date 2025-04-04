@@ -23,13 +23,33 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validatePassword = (password: string) => {
+    const hasMinLength = password.length >= 8;
+    const hasRequiredChars =
+      /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$/.test(password);
+    return {
+      isValid: hasMinLength && hasRequiredChars,
+      checks: {
+        length: hasMinLength,
+        complexity: hasRequiredChars,
+      },
+    };
+  };
+
   const handleSendCode = async () => {
+    if (!email) {
+      setError("Email is required");
+      return;
+    }
     if (!validateEmail(email)) {
+      setError("Please enter a valid email address.");
       return;
     }
     setLoading(true);
@@ -53,7 +73,7 @@ export default function ForgotPasswordPage() {
 
   const handleVerifyCode = async () => {
     if (!code) {
-      setError("Please enter the code.");
+      setError("Verification code is required");
       return;
     }
     setLoading(true);
@@ -83,8 +103,22 @@ export default function ForgotPasswordPage() {
   };
 
   const handleResetPassword = async () => {
+    if (!newPassword) {
+      setError("New password is required");
+      return;
+    }
+    if (!confirmPassword) {
+      setError("Please confirm your password");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match.");
+      return;
+    }
+
+    const validation = validatePassword(newPassword);
+    if (!validation.isValid) {
+      setError("Password does not meet requirements.");
       return;
     }
 
@@ -113,6 +147,8 @@ export default function ForgotPasswordPage() {
       setLoading(false);
     }
   };
+
+  const toggleVisibility = () => setIsVisible(!isVisible);
 
   return (
     <div className="flex justify-center items-center min-h-[70vh]">
@@ -149,13 +185,14 @@ export default function ForgotPasswordPage() {
               </p>
               <Input
                 type="email"
-                label="Enter your e-mail address"
+                label="Email"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setError(null);
                 }}
                 className="mt-3 mb-3"
+                isInvalid={!!error && !email}
               />
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button
@@ -163,7 +200,7 @@ export default function ForgotPasswordPage() {
                 className="w-full p-5"
                 onClick={handleSendCode}
               >
-                {loading ? <Spinner color="default" size="sm" /> : "Submit"}
+                {loading ? <Spinner color="default" size="sm" /> : "Continue"}
               </Button>
             </>
           ) : step === "code" ? (
@@ -175,8 +212,12 @@ export default function ForgotPasswordPage() {
                 type="text"
                 label="Verification Code"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                onChange={(e) => {
+                  setCode(e.target.value);
+                  setError(null);
+                }}
                 className="mt-5 mb-5"
+                isInvalid={!!error && !code}
               />
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button
@@ -197,24 +238,90 @@ export default function ForgotPasswordPage() {
                 Enter your new password and confirm it.
               </p>
               <Input
-                type="password"
+                type={isVisible ? "text" : "password"}
                 label="New Password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setError(null);
+                }}
                 className="mt-5"
+                isInvalid={
+                  !!error &&
+                  (!newPassword || !validatePassword(newPassword).isValid)
+                }
+                endContent={
+                  <button type="button" onClick={toggleVisibility}>
+                    {isVisible ? (
+                      <Icon
+                        className="pointer-events-none text-2xl text-default-400"
+                        icon="ph:eye-closed-light"
+                      />
+                    ) : (
+                      <Icon
+                        className="pointer-events-none text-2xl text-default-400"
+                        icon="ion:eye-outline"
+                      />
+                    )}
+                  </button>
+                }
               />
+              <div
+                className={`text-sm space-y-1 transition-all duration-300 overflow-hidden ${
+                  newPassword ? "max-h-40" : "max-h-0"
+                }`}
+              >
+                <div className="flex items-center">
+                  <Icon
+                    icon={
+                      newPassword.length >= 8
+                        ? "mdi:check-circle"
+                        : "mdi:circle-outline"
+                    }
+                    className={`mr-2 ${
+                      newPassword.length >= 8
+                        ? "text-green-500"
+                        : "text-gray-400"
+                    }`}
+                  />
+                  <span>At least 8 characters</span>
+                </div>
+                <div className="flex items-center">
+                  <Icon
+                    icon={
+                      /^(?=.*[0-9])(?=.*[!@#$%^&*])/.test(newPassword)
+                        ? "mdi:check-circle"
+                        : "mdi:circle-outline"
+                    }
+                    className={`mr-2 ${
+                      /^(?=.*[0-9])(?=.*[!@#$%^&*])/.test(newPassword)
+                        ? "text-green-500"
+                        : "text-gray-400"
+                    }`}
+                  />
+                  <span>Contains a number and special character</span>
+                </div>
+              </div>
               <Input
-                type="password"
+                type={isVisible ? "text" : "password"}
                 label="Confirm Password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setError(null);
+                }}
                 className="mb-5"
+                isInvalid={
+                  !!error &&
+                  (!confirmPassword || newPassword !== confirmPassword)
+                }
               />
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button
                 color="primary"
                 className="w-full p-5"
                 onClick={handleResetPassword}
+                disabled={!validatePassword(newPassword).isValid}
               >
                 {loading ? (
                   <Spinner color="default" size="sm" />
